@@ -1,6 +1,8 @@
 import torch
 import torchaudio
+from torchaudio import transforms
 import random
+from torch.utils.data import Dataset
 
 # ----------------------------
 # Sound Dataset
@@ -28,7 +30,7 @@ class SoundDS(Dataset):
     # Get i'th item in dataset
     # ----------------------------
     def __getitem__(self, idx):
-        aud = torchaudio.load(df.loc[idx]['path_to_data'])
+        aud = torchaudio.load(self.df.loc[idx]['path_to_data'])
         waveform, SAMPLE_RATE = aud
 
         max_ms = self.duration
@@ -57,6 +59,6 @@ class SoundDS(Dataset):
         spectrogram = transforms.Spectrogram(n_fft=1024,
                                              hop_length=512)
 
-        spec = spectrogram(waveform)
+        spec = spectrogram(waveform).flatten()
 
         return spec
