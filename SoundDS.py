@@ -29,7 +29,7 @@ class SoundDS(Dataset):
     # ----------------------------
     # Choose sample rate
     # ----------------------------
-    def set_sample_duration(self, sample_rate):
+    def set_sample_rate(self, sample_rate):
         self.sr = sample_rate
     
     # ----------------------------
