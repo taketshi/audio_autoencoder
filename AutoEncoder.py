@@ -11,6 +11,9 @@ class AutoEncoder(nn.Module):
     def __init__(self, encoder_layers, decoder_layers):
         super(AutoEncoder, self).__init__()
 
+        # Save bottleneck size
+        self.bottleneck = encoder_layers[-1]
+
         # Create Encoder
         encoder_layers_torch = []
         enc_len = len(encoder_layers)
@@ -76,3 +79,26 @@ class AutoEncoder(nn.Module):
                 losses.append(loss.item())
 
         return losses
+
+    def input_gen(self, output, epochs = 100, optimizer = 'sgd', criterion = 'mse', lr = 0.01):
+
+        input = torch.rand(1, self.bottleneck)
+
+
+        if optimizer == 'sgd':
+            optimizer = optim.SGD([input], lr = lr)
+        
+        if criterion == 'mse':
+            criterion = nn.MSELoss()
+
+        for _ in range(epochs):
+            optimizer.zero_grad()
+
+            pred = self.decoder(input)
+
+            loss = criterion(pred, output)
+            loss.backward()
+
+            optimizer.step()
+
+        return input
