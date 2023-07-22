@@ -62,7 +62,7 @@ class SoundDS(Dataset):
         waveform = waveform[0] # mix down
 
         # Reduce the Sample Rate
-        resampler = torchaudio.transforms.Resample(orig_freq=SAMPLE_RATE, new_freq=self.sr)
+        resampler = transforms.Resample(orig_freq=SAMPLE_RATE, new_freq=self.sr)
         waveform = resampler(waveform)
 
         spectrogram = transforms.Spectrogram(n_fft=1024,
