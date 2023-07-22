@@ -54,7 +54,7 @@ class AutoEncoder(nn.Module):
         if optimizer == 'sgd':
             optimizer = optim.SGD(self.parameters(), lr = lr)
 
-        loss = []
+        losses = []
 
         for _ in range(epochs):
                 for x_data, y_data in data_loader:
@@ -73,6 +73,6 @@ class AutoEncoder(nn.Module):
                     # Upgrade Weights and Biases
                     optimizer.step()
 
-                loss.append(loss.item())
+                losses.append(loss.item())
 
-        return loss
+        return losses
