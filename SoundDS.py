@@ -11,7 +11,7 @@ class SoundDS(Dataset):
     def __init__(self, df):
         self.df = df
         self.duration = 10000 # 10 seconds
-        self.sr = 44100
+        self.sr = 8000
         self.channel = 1
 
     # ----------------------------
@@ -25,6 +25,12 @@ class SoundDS(Dataset):
     # ----------------------------
     def set_sample_duration(self, duration):
         self.duration = duration
+    
+    # ----------------------------
+    # Choose sample rate
+    # ----------------------------
+    def set_sample_duration(self, sample_rate):
+        self.sr = sample_rate
     
     # ----------------------------
     # Get i'th item in dataset
@@ -53,8 +59,11 @@ class SoundDS(Dataset):
 
             waveform = torch.cat((pad_begin, waveform, pad_end), 1)
 
-
         waveform = waveform[0] # mix down
+
+        # Reduce the Sample Rate
+        resampler = torchaudio.transforms.Resample(orig_freq=SAMPLE_RATE, new_freq=self.sr)
+        waveform = resampler(waveform)
 
         spectrogram = transforms.Spectrogram(n_fft=1024,
                                              hop_length=512)
