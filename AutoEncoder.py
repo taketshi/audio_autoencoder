@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import time
 
 
 class AutoEncoder(nn.Module):
@@ -43,7 +44,7 @@ class AutoEncoder(nn.Module):
         output = self.decoder(output)
         return output
 
-    def train(self, dataset, criterion = 'mse', optimizer = 'sgd', lr = 0.01, batch_size = 1, epochs = 5):
+    def train(self, dataset, criterion = 'mse', optimizer = 'sgd', lr = 0.01, batch_size = 1, epochs = 5, verbose = 5):
         
         data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -56,27 +57,36 @@ class AutoEncoder(nn.Module):
         # Optimizer
         if optimizer == 'sgd':
             optimizer = optim.SGD(self.parameters(), lr = lr)
+        elif optimizer == 'adam':
+            optimizer = optim.Adam(self.parameters(), lr = lr)
 
         losses = []
+        start_time = time.time()
+        for i in range(epochs):
+            batch_n = 0
+            for data in data_loader:
 
-        for _ in range(epochs):
-                for x_data, y_data in data_loader:
+                # Reset Gradients
+                optimizer.zero_grad()
 
-                    # Reset Gradients
-                    optimizer.zero_grad()
-
-                    # Forward Pass
-                    y_pred =  self.forward(x_data)
+                # Forward Pass
+                pred =  self.forward(data)
 
 
-                    # Loss Function
-                    loss = criterion(y_pred, y_data)
-                    loss.backward()
+                # Loss Function
+                loss = criterion(pred, data)
+                loss.backward()
 
-                    # Upgrade Weights and Biases
-                    optimizer.step()
+                # Upgrade Weights and Biases
+                optimizer.step()
 
-                losses.append(loss.item())
+                batch_n += 1
+                if verbose != 0 and batch_n % verbose == 0:
+                    print('Epoch:', i + 1, '| Batch number:', batch_n , '| Loss:', loss.item(), '| Time:',   round(time.time() - start_time, 2), 's')
+                    start_time = time.time()
+
+
+            losses.append(loss.item())
 
         return losses
 

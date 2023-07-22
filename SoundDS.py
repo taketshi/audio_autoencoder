@@ -8,11 +8,12 @@ from torch.utils.data import Dataset
 # Sound Dataset
 # ----------------------------
 class SoundDS(Dataset):
-    def __init__(self, df):
+    def __init__(self, df, sr = 8000, duration = 10):
         self.df = df
-        self.duration = 10000 # 10 seconds
-        self.sr = 8000
+        self.duration = duration*1000 # 10 seconds
+        self.sr = sr
         self.channel = 1
+        self.spec_size = None
 
     # ----------------------------
     # Number of items in dataset
@@ -68,6 +69,9 @@ class SoundDS(Dataset):
         spectrogram = transforms.Spectrogram(n_fft=1024,
                                              hop_length=512)
 
-        spec = spectrogram(waveform).flatten()
+        spec = spectrogram(waveform)
 
-        return spec
+        if self.spec_size == None:
+            self.spec_size = spec.shape
+
+        return spec.flatten()
