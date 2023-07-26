@@ -17,7 +17,7 @@ class AutoEncoderConv(nn.Module):
         # {channels: [1, 40, 20, 10],
         #  kernel_conv: [3, 3, 1, 2],
         #  padding: [1, 1, 1, 3],
-        #  stride_conv: [1,1,1,1],
+        #  stride_conv: [1,1,1],
         #  kernel_pool: [2, 2, 2],
         #  stride_pool: [2, 3, 5, 2]}
 
@@ -30,7 +30,7 @@ class AutoEncoderConv(nn.Module):
         for i in range(enc_len - 1):
             encoder_layers_torch.append(nn.Conv2d(in_channels = encoder_layers['channels'][i], out_channels = encoder_layers['channels'][i+1],
                                         kernel_size = encoder_layers['kernel_conv'][i], padding = encoder_layers['padding'][i]))
-            encoder_layers_torch.append(nn.ReLU())
+            encoder_layers_torch.append(nn.LeakyReLU())
             encoder_layers_torch.append(nn.MaxPool2d(kernel_size=encoder_layers['kernel_pool'][i], stride=encoder_layers['stride_pool'][i]))
 
         self.encoder = nn.Sequential(*encoder_layers_torch)
@@ -61,7 +61,7 @@ class AutoEncoderConv(nn.Module):
         output = self.decoder(output)
         return output
 
-    def train(self, dataset, criterion = 'mse', optimizer = 'sgd', lr = 0.01, batch_size = 1, epochs = 5, verbose = 5):
+    def train(self, dataset, criterion = 'mse', optimizer = 'sgd', lr = 0.01, batch_size = 1, epochs = 5, reg = None, verbose = 5):
         
         data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -70,12 +70,15 @@ class AutoEncoderConv(nn.Module):
             criterion = nn.MSELoss()
         elif criterion == 'cross_entropy':
             criterion = nn.CrossEntropyLoss()
+        elif criterion == 'mae':
+            criterion = nn.L1Loss()
 
         # Optimizer
         if optimizer == 'sgd':
             optimizer = optim.SGD(self.parameters(), lr = lr)
         elif optimizer == 'adam':
             optimizer = optim.Adam(self.parameters(), lr = lr)
+
 
         losses = []
         start_time = time.time()
@@ -92,6 +95,15 @@ class AutoEncoderConv(nn.Module):
 
                 # Loss Function
                 loss = criterion(pred, data)
+
+                # Regularization
+                if reg == 'l1':
+                    l1_regularization = 0.0
+                    for param in self.parameters():
+                        l1_regularization += torch.norm(param.detach(), 1)
+                    loss += 0.0005 * l1_regularization
+
+                
                 loss.backward()
 
                 # Upgrade Weights and Biases
@@ -114,6 +126,8 @@ class AutoEncoderConv(nn.Module):
         
         if criterion == 'mse':
             criterion = nn.MSELoss()
+        elif criterion == 'mae':
+            criterion = nn.MAELoss()
 
         for _ in range(epochs):
             optimizer.zero_grad()
