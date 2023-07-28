@@ -97,11 +97,15 @@ class AutoEncoderConv(nn.Module):
                 loss = criterion(pred, data)
 
                 # Regularization
-                if reg == 'l1':
-                    l1_regularization = 0.0
+                if reg != None:
+                    if reg == 'l1':
+                        p = 1
+                    elif reg == 'l2':
+                        p = 2
+                    regularization = 0.0
                     for param in self.parameters():
-                        l1_regularization += torch.norm(param.detach(), 1)
-                    loss += 0.0005 * l1_regularization
+                        regularization += torch.norm(param.detach(), p)
+                    loss += 0.0005 * regularization
 
                 
                 loss.backward()
@@ -119,24 +123,37 @@ class AutoEncoderConv(nn.Module):
 
         return losses
 
-    def input_gen(self, output, rand_input, epochs = 100, optimizer = 'sgd', criterion = 'mse', lr = 0.01):
+    def input_gen(self, output, rand_input, epochs = 10, optimizer = 'sgd', criterion = 'mse', lr = 0.01):
+        
+        # Making sure it has gradients on
+        rand_input.requires_grad = True
 
         if optimizer == 'sgd':
             optimizer = optim.SGD([rand_input], lr = lr)
+        elif optimizer == 'adam':
+            optimizer = optim.Adam([rand_input], lr = lr)
         
         if criterion == 'mse':
             criterion = nn.MSELoss()
         elif criterion == 'mae':
-            criterion = nn.MAELoss()
+            criterion = nn.L1Loss()
+
+        losses = []
 
         for _ in range(epochs):
+            # Reset optimizer
             optimizer.zero_grad()
 
+            # Forward pass
             pred = self.decoder(rand_input)
 
+            # Calculate loss
             loss = criterion(pred, output)
             loss.backward()
 
+            losses.append(loss.item())
+
+            # Change gradients
             optimizer.step()
 
-        return input
+        return rand_input, losses
