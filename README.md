@@ -5,7 +5,7 @@ Motivated by a teacher on a online summer school, we tried to use an AutoEncoder
 ## Description
 On this project we used datasets of piano and guitar sounds. We managed to get 100 samples of each. Since we are working with audio, we increased these sets by shuffling parts of sounds and re-pitching the instrument.
 
-# Build Status
+## Build Status
 New ideas to try in the future.
 
 ## Files
